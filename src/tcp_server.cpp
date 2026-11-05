@@ -1,22 +1,26 @@
 #include "hsms/tcp_server.hpp"
 #include "hsms/byte_order.hpp"
 
+#include <algorithm> // Required for std::copy_n on GCC/Linux
+#include <cstring>   // Required for std::memcpy on GCC/Linux
+#include <iostream>
+#include <vector>
+
 #ifdef _WIN32
     #include <winsock2.h>
     #include <ws2tcpip.h>
     #pragma comment(lib, "Ws2_32.lib")
     using socket_t = SOCKET;
+    using socklen_t_type = int;
     constexpr socket_t INVALID_SOCK = INVALID_SOCKET;
 #else
     #include <sys/socket.h>
     #include <netinet/in.h>
     #include <unistd.h>
     using socket_t = int;
+    using socklen_t_type = socklen_t;
     constexpr socket_t INVALID_SOCK = -1;
 #endif
-
-#include <iostream>
-#include <vector>
 
 namespace hsms {
 
@@ -90,7 +94,7 @@ void TcpServer::send_secs_message(const SecsMessage& msg) {
 void TcpServer::accept_loop() {
     while (is_running_) {
         sockaddr_in client_addr{};
-        int addr_len = sizeof(client_addr);
+        socklen_t_type addr_len = sizeof(client_addr);
         socket_t client_sock = accept(static_cast<socket_t>(server_socket_), reinterpret_cast<sockaddr*>(&client_addr), &addr_len);
 
         if (client_sock == INVALID_SOCK) {
