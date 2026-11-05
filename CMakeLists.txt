@@ -22,6 +22,7 @@ add_library(hsms_core
 	src/byte_order.cpp
 	src/header.cpp
 	src/state_machine.cpp
+	src/secs2.cpp
 )
 
 # Specify header search paths for the library target
@@ -48,6 +49,7 @@ enable_testing()
 add_executable(hsms_tests
     tests/test_sanity.cpp
 	tests/test_hsms.cpp
+	tests/test_secs2.cpp
 )
 
 # Link the unit test target against core library and GoogleTest
