@@ -139,33 +139,39 @@ std::pair<SecsItem, size_t> SecsItem::deserialize(const uint8_t* data, size_t le
 
     const uint8_t* payload = data + header_len;
 
-    switch (fmt) {
-        case ItemFormat::ASCII: {
-            std::string str(reinterpret_cast<const char*>(payload), length);
-            return {SecsItem(str), header_len + length};
-        }
-        case ItemFormat::U1: {
-            return {SecsItem(payload[0]), header_len + 1};
-        }
-        case ItemFormat::U4: {
-            uint32_t raw_val;
-            std::memcpy(&raw_val, payload, 4);
-            return {SecsItem(network_to_host32(raw_val)), header_len + 4};
-        }
-        case ItemFormat::I4: {
-            uint32_t raw_val;
-            std::memcpy(&raw_val, payload, 4);
-            int32_t host_val = static_cast<int32_t>(network_to_host32(raw_val));
-            return {SecsItem(host_val), header_len + 4};
-        }
-        case ItemFormat::Boolean: {
-            return {SecsItem(payload[0] != 0x00), header_len + 1};
-        }
-        default:
-            break;
-    }
+	switch (fmt) {
+		case ItemFormat::ASCII: {
+			std::string str(reinterpret_cast<const char*>(payload), length);
+			SecsItem item(str);
+			return {std::move(item), header_len + length};
+		}
+		case ItemFormat::U1: {
+			SecsItem item(payload[0]);
+			return {std::move(item), header_len + 1};
+		}
+		case ItemFormat::U4: {
+			uint32_t raw_val;
+			std::memcpy(&raw_val, payload, 4);
+			SecsItem item(network_to_host32(raw_val));
+			return {std::move(item), header_len + 4};
+		}
+		case ItemFormat::I4: {
+			uint32_t raw_val;
+			std::memcpy(&raw_val, payload, 4);
+			int32_t host_val = static_cast<int32_t>(network_to_host32(raw_val));
+			SecsItem item(host_val);
+			return {std::move(item), header_len + 4};
+		}
+		case ItemFormat::Boolean: {
+			SecsItem item(payload[0] != 0x00);
+			return {std::move(item), header_len + 1};
+		}
+		default:
+			break;
+	}
 
-    return {SecsItem(), header_len + length};
+	SecsItem item;
+	return {std::move(item), header_len + length};
 }
 
 std::vector<uint8_t> SecsMessage::encode(uint16_t session_id) const {
