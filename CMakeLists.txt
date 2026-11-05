@@ -19,6 +19,9 @@ endif()
 # Define core static library target
 add_library(hsms_core
     src/common.cpp
+	src/byte_order.cpp
+	src/header.cpp
+	src/state_machine.cpp
 )
 
 # Specify header search paths for the library target
@@ -44,6 +47,7 @@ enable_testing()
 # Define the unit test executable target
 add_executable(hsms_tests
     tests/test_sanity.cpp
+	tests/test_hsms.cpp
 )
 
 # Link the unit test target against core library and GoogleTest
