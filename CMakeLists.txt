@@ -10,6 +10,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Option to enable AddressSanitizer (OFF for local MSVC builds; ON in Linux CI)
 option(ENABLE_SANITIZERS "Enable AddressSanitizer" OFF)
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    add_compile_options(-Wno-maybe-uninitialized)
+endif()
+
 if(MSVC)
     add_compile_options(/W4 /WX)
     if(ENABLE_SANITIZERS)
