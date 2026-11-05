@@ -7,9 +7,9 @@ namespace hsms {
 
 SecsItem::SecsItem(std::string ascii_str)
     : format_(ItemFormat::ASCII), value_(std::move(ascii_str)) {}
-	
+
 SecsItem::SecsItem(const char* ascii_str)
-	: format_(ItemFormat::ASCII), value_(std::string(ascii_str)) {} 
+    : format_(ItemFormat::ASCII), value_(std::string(ascii_str)) {}
 
 SecsItem::SecsItem(uint8_t u1_val)
     : format_(ItemFormat::U1), value_(u1_val) {}
@@ -94,13 +94,7 @@ std::vector<uint8_t> SecsItem::serialize() const {
         out.push_back(static_cast<uint8_t>(length & 0xFF));
     }
 
-    // Append raw payload (except for List where children write their own format header)
-    if (format_ != ItemFormat::List) {
-        out.insert(out.end(), payload.begin(), payload.end());
-    } else {
-        out.insert(out.end(), payload.begin(), payload.end());
-    }
-
+    out.insert(out.end(), payload.begin(), payload.end());
     return out;
 }
 
@@ -110,6 +104,11 @@ std::pair<SecsItem, size_t> SecsItem::deserialize(const uint8_t* data, size_t le
     uint8_t fmt_byte = data[0];
     uint8_t fmt_code = (fmt_byte >> 2) & 0x3F;
     uint8_t len_count = fmt_byte & 0x03;
+
+    // SEMI E5 §6.2: Length byte count must be 1, 2, or 3 (0 is invalid)
+    if (len_count == 0) {
+        throw std::runtime_error("Invalid SECS-II length byte count of 0");
+    }
 
     if (len < static_cast<size_t>(1 + len_count)) {
         throw std::runtime_error("Buffer underflow reading length bytes");
@@ -205,7 +204,7 @@ SecsMessage SecsMessage::create_s1f1(uint32_t system_bytes) {
     msg.function = 1;
     msg.wait_bit = true;
     msg.system_bytes = system_bytes;
-    msg.root_item = SecsItem(SecsItemList{}); // Empty list header for S1F1
+    msg.root_item = SecsItem(SecsItemList{});
     return msg;
 }
 
@@ -230,7 +229,7 @@ SecsMessage SecsMessage::create_s2f41(uint32_t system_bytes, const std::string& 
     msg.system_bytes = system_bytes;
     msg.root_item = SecsItem(SecsItemList{
         SecsItem(command),
-        SecsItem(SecsItemList{}) // Parameter list
+        SecsItem(SecsItemList{})
     });
     return msg;
 }
@@ -244,7 +243,7 @@ SecsMessage SecsMessage::create_s6f11(uint32_t system_bytes, uint32_t data_id, u
     msg.root_item = SecsItem(SecsItemList{
         SecsItem(data_id),
         SecsItem(ceid),
-        SecsItem(SecsItemList{}) // Event reports container
+        SecsItem(SecsItemList{})
     });
     return msg;
 }
